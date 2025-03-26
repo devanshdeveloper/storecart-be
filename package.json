@@ -1,0 +1,46 @@
+{
+  "name": "storecart-server",
+  "version": "1.0.0",
+  "description": "Education Management System Backend",
+  "main": "src/index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "seed": "node src/seeds/index.js",
+    "deploy": "git add . && git commit -m \"%npm_config_message%\" && git push",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@sendinblue/client": "^3.3.1",
+    "axios": "^1.8.2",
+    "bcryptjs": "^2.4.3",
+    "chalk": "^4.1.2",
+    "cors": "^2.8.5",
+    "date-fns": "^2.30.0",
+    "dotenv": "^16.3.1",
+    "exifreader": "^4.26.2",
+    "express": "^4.18.2",
+    "file-type": "^16.5.4",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^7.5.0",
+    "morgan": "^1.10.0",
+    "multer": "^1.4.5-lts.1",
+    "nodemailer": "^6.10.0",
+    "nodemailer-sendinblue-transport": "^2.0.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "sharp": "^0.33.5",
+    "tw-to-css": "^0.0.12",
+    "validator": "^13.12.0",
+    "winston": "^3.17.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.26.9",
+    "@babel/preset-env": "^7.26.9",
+    "@babel/preset-react": "^7.26.3",
+    "@babel/register": "^7.25.9",
+    "jest": "^29.7.0",
+    "nodemon": "^3.0.1"
+  }
+}

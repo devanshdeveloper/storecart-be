@@ -1,0 +1,27 @@
+STEP BY STEP GUIDE FOR LISTING FILES IN INDEX.JS
+TARGET FOLDER : 
+TARGET FILE : 
+1. ANALYZE PROJECT STRUCTURE
+   - Scan the project directory to identify all relevant files
+   - Focus on files that need to be exported through index.js
+   - Note the file locations and their relative paths
+
+2. IDENTIFY REQUIRED FILES
+   - Look for JavaScript/TypeScript files in the directory
+   - Exclude test files, configuration files, and temporary files
+   - Consider only files that provide functionality or components
+
+3. ORGANIZE FILES ALPHABETICALLY
+   - Create a list of all identified files
+   - Sort the list alphabetically by filename
+   - Maintain consistent naming conventions
+
+4. STRUCTURE THE TARGET FILE
+- start by reading the target file
+- continue the syntax
+
+7. VERIFY AND TEST
+   - Check all import paths are correct
+   - Verify all exports are properly named
+   - Test the imports in other files
+   - Ensure no circular dependencies

@@ -1,0 +1,4 @@
+1. Start by reading builder-rules/start.txt and perform those actions
+2. Start by reading server/builder-rules/current.txt and server/builder-rules/architecture.txt and perform those actions
+2. Start by reading server/builder-rules/current.txt and server/builder-rules/architecture.txt and perform those actions
+4. Solve the terminal error

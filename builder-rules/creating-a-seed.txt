@@ -1,0 +1,126 @@
+# Creating a Seed File
+
+Seed files are used to populate the database with initial data. This guide demonstrates how to create seed files for your models using both static and dynamic approaches.
+
+## Basic Structure
+
+A seed file typically exports an object or function with the following structure:
+
+```javascript
+// Static Seed Example
+const modelSeeds = {
+  Model: YourModel,  // The mongoose model
+  data: []          // Array of data objects
+};
+
+// Dynamic Seed Example
+const modelSeeds = async () => ({
+  Model: YourModel,
+  data: []  // Can contain async-generated data
+});
+```
+
+## Static Seeding Example
+
+Use static seeding when your data doesn't require any processing before insertion:
+
+```javascript
+const { Test } = require("../models");
+
+const testSeeds = {
+  Model: Test,
+  data: [
+    {
+      title: "Mathematics Mid-Term",
+      description: "Mid-term examination for Mathematics",
+      subject: "Mathematics",
+      duration: 120,
+      totalMarks: 100,
+      questions: [
+        {
+          question: "What is 2 + 2?",
+          options: ["3", "4", "5", "6"],
+          correctAnswer: "4",
+          marks: 10
+        }
+      ]
+    }
+  ]
+};
+
+module.exports = testSeeds;
+```
+
+## Dynamic Seeding Example
+
+Use dynamic seeding when you need to process data (like hashing passwords) before insertion:
+
+```javascript
+const { User } = require("../models");
+const { AuthHelper } = require("../helpers");
+const { UserTypes } = require("../constants");
+
+const authHelper = new AuthHelper();
+
+const userSeeds = async () => ({
+  Model: User,
+  data: [
+    {
+      name: "Admin User",
+      email: "admin@example.com",
+      password: await authHelper.hashPassword("securepassword"),
+      type: UserTypes.Admin
+    }
+  ]
+});
+
+module.exports = userSeeds;
+```
+
+## Best Practices
+
+1. **Model Import**
+   - Always import models from the models index file
+   - Use destructuring for cleaner imports
+
+2. **Data Structure**
+   - Match the model schema exactly
+   - Include all required fields
+   - Use appropriate data types
+
+3. **Relationships**
+   - Use ObjectId references for related models
+   - Ensure referenced IDs exist in other seeds
+
+4. **Security**
+   - Never commit real passwords or sensitive data
+   - Use helper functions for password hashing
+   - Store API keys and secrets in environment variables
+
+5. **Organization**
+   - Name files consistently (e.g., `model.seed.js`)
+   - Group related seeds together
+   - Keep seed data realistic but minimal
+
+## Advanced Example with Relationships
+
+```javascript
+const { Teacher } = require("../models");
+
+const teacherSeeds = {
+  Model: Teacher,
+  data: [
+    {
+      employeeId: "TCH1001",
+      name: "John Doe",
+      email: "john@example.com",
+      // Reference to Subject model IDs
+      subjects: ["67cc136dafa3e307cd531ad6", "67cc136dafa3e307cd531ae2"],
+      qualification: "Ph.D. in Mathematics",
+      experience: 8
+    }
+  ]
+};
+
+module.exports = teacherSeeds;
+```
