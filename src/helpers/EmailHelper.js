@@ -1,16 +1,18 @@
 const nodemailer = require("nodemailer");
 const sendinblueTransport = require("nodemailer-sendinblue-transport");
+const {
+  SENDINBLUE_API_KEY,
+  DEFAULT_SENDER_EMAIL,
+} = require("../constants/env");
 
 class EmailHelper {
   constructor(options = {}) {
-    this.apiKey = options.apiKey || process.env.SENDINBLUE_API_KEY;
+    this.apiKey = options.apiKey || SENDINBLUE_API_KEY;
     this.defaultSender =
-      options.defaultSender ||
-      process.env.DEFAULT_SENDER_EMAIL ||
-      "noreply@Storecart.com";
+      options.defaultSender || DEFAULT_SENDER_EMAIL || "noreply@Storecart.com";
     // this.defaultSender = options.defaultSender || {
-    //   email: process.env.DEFAULT_SENDER_EMAIL || 'noreply@Storecart.com',
-    //   name: process.env.DEFAULT_SENDER_NAME || 'Storecart'
+    //   email: DEFAULT_SENDER_EMAIL || 'noreply@Storecart.com',
+    //   name: DEFAULT_SENDER_NAME || 'Storecart'
     // };
 
     // Initialize Nodemailer with Sendinblue transport
@@ -66,7 +68,7 @@ module.exports = EmailHelper;
 
 // Initialize EmailHelper
 const emailHelper = new EmailHelper({
-  apiKey: process.env.BREVO_API_KEY,
+  apiKey: BREVO_API_KEY,
   defaultSender: {
     email: 'noreply@Storecart.com',
     name: 'Storecart'

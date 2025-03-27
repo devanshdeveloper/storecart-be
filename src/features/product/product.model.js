@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { SERVER_URL } = require("../../constants/env");
 const { Schema } = mongoose;
 
 const ProductSchema = new Schema(
@@ -23,6 +24,15 @@ const ProductSchema = new Schema(
       required: true,
       min: 0,
     },
+    stock: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    featured: {
+      type: Boolean,
+      default: false,
+    },
     category: {
       type: Schema.Types.ObjectId,
       ref: "Category",
@@ -38,9 +48,27 @@ const ProductSchema = new Schema(
       default: null,
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    toJSON: {
+      virtuals: true,
+      versionKey: false,
+      transform: (doc, ret) => {
+        delete ret.createdAt;
+        delete ret.updatedAt;
+        delete ret.deletedAt;
+        delete ret.id;
+        return ret;
+      },
+    },
+    toObject: { virtuals: true, id: false },
+  }
 );
 
+ProductSchema.virtual("imageUrls").get(function () {
+  if (!this.images || !this.images.length) return [];
+  return this.images.map((image) => `${SERVER_URL}${image}`);
+});
 
 const Product = mongoose.model("Product", ProductSchema);
 

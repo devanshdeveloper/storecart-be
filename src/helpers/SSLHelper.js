@@ -157,9 +157,13 @@ class SSLHelper {
       this.generateCertificates();
     }
 
+    const rootCACert = path.join(this.SSL_DIR, "rootCA.crt");
     return {
       cert: fs.readFileSync(this.CERT_PATH),
       key: fs.readFileSync(this.KEY_PATH),
+      ca: fs.readFileSync(rootCACert),
+      requestCert: false,
+      rejectUnauthorized: false
     };
   }
 }

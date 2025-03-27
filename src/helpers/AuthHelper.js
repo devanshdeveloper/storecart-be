@@ -4,11 +4,12 @@ const RequestHelper = require("./RequestHelper");
 const EncryptionHelper = require("./EncryptionHelper");
 const ResponseHelper = require("./ResponseHelper");
 const { ErrorMap, UserTypes } = require("../constants");
+const { JWT_SECRET } = require("../constants/env");
 
 class AuthHelper {
   constructor(options = {}) {
     this.jwtSecret =
-      options.jwtSecret || process.env.JWT_SECRET || "your-secret-key";
+      options.jwtSecret || JWT_SECRET || "your-secret-key";
     this.jwtExpiresIn = options.jwtExpiresIn || "1d";
     this.saltRounds = options.saltRounds || 8;
     this.encryptionHelper = new EncryptionHelper(options);

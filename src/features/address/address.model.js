@@ -57,8 +57,7 @@ const addressSchema = new mongoose.Schema(
 );
 
 // Create indexes for frequently queried fields
-addressSchema.index({ postalCode: 1 });
-addressSchema.index({ city: 1, state: 1 });
+addressSchema.index({ user: 1, isActive: 1 });
 
 const Address = mongoose.model("Address", addressSchema);
 

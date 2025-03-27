@@ -1,9 +1,10 @@
 const mongoose = require("mongoose");
 const logger = require("./LogHelper");
+const { MONGODB_URI } = require("../constants/env");
 
 class MongoDBHelper {
   constructor(
-    uri = process.env.MONGODB_URI || "mongodb://localhost:27017/storecart",
+    uri = MONGODB_URI || "mongodb://localhost:27017/storecart",
     options = {}
   ) {
     this.uri = uri;

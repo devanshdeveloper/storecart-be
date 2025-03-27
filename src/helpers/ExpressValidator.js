@@ -174,6 +174,14 @@ class ExpressValidator {
     };
   }
 
+  mongoId(message = "Invalid ID format") {
+    return {
+      type: "mongoId",
+      validate: (value) => /^[0-9a-fA-F]{24}$/.test(value),
+      message,
+    };
+  }
+
   // Custom validation rule
   custom(validatorFn, message = "Validation failed") {
     return {

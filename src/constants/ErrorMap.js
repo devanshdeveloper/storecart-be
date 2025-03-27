@@ -151,6 +151,13 @@ const ErrorMap = {
     message: "The request payload exceeds the allowed limit.",
   },
 
+  //INVALID_PROMO 
+  INVALID_PROMO: {
+    name: "INVALID_PROMO",
+    status: 400,
+    message: "The promo code is invalid.", 
+  },
+
   // General Errors
   NOT_FOUND: {
     name: "NOT_FOUND",

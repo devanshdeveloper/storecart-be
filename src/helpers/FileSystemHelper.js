@@ -128,14 +128,6 @@ class FileSystemHelper {
 
   // Delete image file
   static async deleteImage(filePath) {
-    const buffer = await this.readImage(filePath);
-    const type = await fileTypeFromBuffer(buffer);
-
-    // Verify if it's actually an image before deleting
-    if (!type || !type.mime.startsWith("image/")) {
-      throw new Error("File is not an image");
-    }
-
     await fs.unlink(filePath);
   }
 
@@ -145,8 +137,7 @@ class FileSystemHelper {
       throw new Error("Image path is required");
     }
 
-    const fullPath = this.getUploadPath(imagePath.replace(/^\/+/, ""));
-    await this.deleteImage(fullPath);
+    await this.deleteImage(imagePath);
   }
 }
 

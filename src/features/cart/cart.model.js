@@ -26,11 +26,20 @@ const CartSchema = new Schema(
         },
       },
     ],
-    totalAmount: {
-      type: Number,
-      required: true,
-      min: 0,
-    },
+    appliedPromoCodes: [
+      {
+        promo: {
+          type: Schema.Types.ObjectId,
+          ref: 'PromoCode',
+          required: true
+        },
+        discount: {
+          type: Number,
+          required: true,
+          min: 0
+        }
+      }
+    ],
     deletedAt: {
       type: Date,
       default: null,
@@ -38,6 +47,12 @@ const CartSchema = new Schema(
   },
   { timestamps: true }
 );
+
+CartSchema.virtual('subtotal').get(function() {
+  return this.products.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+});
+
+CartSchema.set('toJSON', { virtuals: true });
 
 const Cart = mongoose.model("Cart", CartSchema);
 

@@ -11,6 +11,12 @@ router.use(
 );
 
 router.use(
+  "/cart",
+  authHelper.authenticate(),
+  require("../features/cart/cart.route")
+);
+
+router.use(
   "/bank",
   authHelper.authenticate(),
   require("../features/bank/bank.route")

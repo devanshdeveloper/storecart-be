@@ -4,6 +4,7 @@ const fs = require("fs").promises;
 const path = require("path");
 const axios = require("axios");
 const { config } = require("dotenv");
+const { SEED_URL, SEED_TOKEN } = require("../constants/env");
 config();
 
 (async () => {
@@ -59,16 +60,11 @@ config();
         for (const item of seedModule.data) {
           try {
             if (seedModule.endpoint) {
-              await axios.post(
-                `${process.env.SEED_URL}${seedModule.endpoint}`,
-                item, {
-                  headers : {
-                    'Authorization' : `Bearer ${process.env.SEED_TOKEN}`
-                  }
-                }
-              );
-
-
+              await axios.post(`${SEED_URL}${seedModule.endpoint}`, item, {
+                headers: {
+                  Authorization: `Bearer ${SEED_TOKEN}`,
+                },
+              });
             } else if (seedModule.Model) await seedModule.Model.create(item);
             else {
               throw new Error(
@@ -80,7 +76,7 @@ config();
             results.failed++;
             results.errors.push({
               item,
-              error : error.response.data,
+              error: error.response.data,
             });
           }
         }
@@ -94,7 +90,7 @@ config();
         if (results.failed > 0) {
           logger.warn(`⚠️ Failed to seed ${results.failed} items from ${file}`);
           results.errors.forEach(({ item, error }) => {
-            logger.error(`Failed to seed item:` , { item, error });
+            logger.error(`Failed to seed item:`, { item, error });
           });
         }
       }

@@ -2,6 +2,7 @@ const chalk = require("chalk");
 const { format } = require("date-fns");
 const fs = require("fs");
 const path = require("path");
+const { NODE_ENV } = require("../constants/env");
 
 // Logger Class
 class Logger {
@@ -163,9 +164,9 @@ class Logger {
 
 // Logger instance with production-specific settings
 const logger = new Logger("info", {
-  logToFile: process.env.NODE_ENV === "production",
+  logToFile: NODE_ENV === "production",
   filePath: "./logs",
-  env: process.env.NODE_ENV || "development",
+  env: NODE_ENV || "development",
 });
 
 module.exports = logger;

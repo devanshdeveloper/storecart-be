@@ -128,6 +128,17 @@ class RequestHelper {
 
     return { username, password };
   }
+
+  getFilePath() {
+    return this.req?.file?.path?.replace(/\\/g, '/');
+  }
+
+  getFilePaths() {
+    if (!this.req?.files) return [];
+    return Array.isArray(this.req.files)
+      ? this.req.files.map(file => file.path?.replace(/\\/g, '/'))
+      : Object.values(this.req.files).flat().map(file => file.path?.replace(/\\/g, '/'));
+  }
 }
 
 module.exports = RequestHelper;

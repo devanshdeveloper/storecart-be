@@ -17,6 +17,7 @@ const {
 } = require("../../helpers");
 const ErrorMap = require("../../constants/ErrorMap");
 const { AuthState } = require("../../constants");
+const { FRONTEND_URL } = require("../../constants/env");
 
 // Configure file upload helper for avatar uploads
 const fileUploadHelper = new FileUploadHelper();
@@ -457,7 +458,7 @@ router.post(
       await emailHelper.sendEmail({
         to: email,
         subject: "Password Reset Request",
-        htmlContent: `<p>Click the link below to reset your password:</p><p><a href="${process.env.FRONTEND_URL}/reset-password/${resetToken.encrypted}">Reset Password</a></p>`,
+        htmlContent: `<p>Click the link below to reset your password:</p><p><a href="${FRONTEND_URL}/reset-password/${resetToken.encrypted}">Reset Password</a></p>`,
       });
 
       return responseHelper

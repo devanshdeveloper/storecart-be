@@ -1,5 +1,6 @@
 const multer = require("multer");
 const path = require("path");
+const FileSystemHelper = require("./FileSystemHelper");
 
 class FileUploadHelper {
   constructor() {
@@ -21,21 +22,32 @@ class FileUploadHelper {
    * @param {string[]} options.allowedTypes - Array of allowed mime types
    * @returns {Object} Configured multer middleware
    */
-  configureImageUpload(options = {}) {
-    const config = {
-      maxSize: options.maxSize || this.defaultConfig.maxSize,
-      allowedTypes: options.allowedTypes || this.defaultConfig.allowedImageTypes,
-    };
-
+  configureImageUpload({
+    maxSize = this.defaultConfig.maxSize,
+    allowedTypes = this.defaultConfig.allowedImageTypes,
+    destination = (req, file, cb) => {
+      cb(null, "uploads/");
+    },
+    filename = (req, file, cb) => {
+      cb(null, this.generateUniqueFilename(file.originalname, file.mimetype));
+    },
+  } = {}) {
     return multer({
-      storage: multer.memoryStorage(),
+      storage: multer.diskStorage({
+        destination: async (req, file, cb) => {
+          const destinationPath = await destination(req, file);
+          await FileSystemHelper.createDirectory(destinationPath);
+          cb(null , destinationPath);
+        },
+        filename,
+      }),
       fileFilter: (req, file, cb) => {
-        if (config.allowedTypes.includes(file.mimetype)) {
+        if (allowedTypes.includes(file.mimetype)) {
           cb(null, true);
         } else {
           cb(
             new Error(
-              `Invalid file type. Only ${config.allowedTypes
+              `Invalid file type. Only ${allowedTypes
                 .map((type) => type.split("/")[1].toUpperCase())
                 .join(", ")} are allowed.`
             )
@@ -43,7 +55,7 @@ class FileUploadHelper {
         }
       },
       limits: {
-        fileSize: config.maxSize,
+        fileSize: maxSize,
       },
     });
   }
@@ -58,7 +70,8 @@ class FileUploadHelper {
   configureDocumentUpload(options = {}) {
     const config = {
       maxSize: options.maxSize || 10 * 1024 * 1024, // 10MB default for documents
-      allowedTypes: options.allowedTypes || this.defaultConfig.allowedDocumentTypes,
+      allowedTypes:
+        options.allowedTypes || this.defaultConfig.allowedDocumentTypes,
     };
 
     return multer({

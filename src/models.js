@@ -4,6 +4,7 @@ const Models = {
   Address: new ModelHelper(require("./features/address/address.model")),
   Bank: new ModelHelper(require("./features/bank/bank.model")),
   Category: new ModelHelper(require("./features/category/category.model")),
+  Cart : new ModelHelper(require("./features/cart/cart.model")),
   Discount: new ModelHelper(require("./features/discount/discount.model")),
   Email: new ModelHelper(require("./features/settings/email/email.model")),
   Notification: new ModelHelper(require("./features/notification/notification.model")),

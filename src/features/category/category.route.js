@@ -2,11 +2,23 @@ const express = require("express");
 const router = express.Router();
 const validatorMiddleware = require("../../middleware/validatorMiddleware");
 const { permissionMiddleware } = require("../permission/permission.middleware");
-const { ResponseHelper, RequestHelper, validator, FileUploadHelper } = require("../../helpers");
+const {
+  ResponseHelper,
+  RequestHelper,
+  validator,
+  FileUploadHelper,
+  idValidatorMiddleware,
+  FileSystemHelper,
+} = require("../../helpers");
 const { ErrorMap, UserTypes, Operations, Modules } = require("../../constants");
 const { Category } = require("../../models");
-const upload = new FileUploadHelper().configureImageUpload();
 
+
+const upload = new FileUploadHelper().configureImageUpload({
+  destination: (req, file) => {
+    return `uploads/${req.user._id}/category/`;
+  },
+});
 
 router.post(
   "/create-one",
@@ -15,10 +27,10 @@ router.post(
     Operations: Operations.CREATE,
     Modules: Modules.Category,
   }),
+  upload.single("image"),
   validatorMiddleware({
     body: {
       name: [validator.required(), validator.string(), validator.minLength(2)],
-      image: [validator.required()],
       description: [validator.string()],
     },
   }),
@@ -30,6 +42,7 @@ router.post(
       const body = requestHelper.body();
       const category = await Category.create({
         ...body,
+        image: requestHelper.getFilePath(),
         user: req.user._id,
       });
       return responseHelper.status(201).body(category).send();
@@ -44,7 +57,7 @@ router.get(
   permissionMiddleware({
     UserTypes: [UserTypes.Admin, UserTypes.SuperAdmin],
     Operations: Operations.READ,
-    Modules: Modules.Categories,
+    Modules: Modules.Category,
   }),
   async (req, res) => {
     const requestHelper = new RequestHelper(req);
@@ -56,7 +69,7 @@ router.get(
       if (!category) {
         return responseHelper.status(404).error(ErrorMap.NOT_FOUND).send();
       }
-      return responseHelper.body(category).send();
+      return responseHelper.body(category.toJSON()).send();
     } catch (error) {
       return responseHelper.error(error).send();
     }
@@ -68,7 +81,7 @@ router.get(
   permissionMiddleware({
     UserTypes: [UserTypes.Admin, UserTypes.SuperAdmin],
     Operations: Operations.READ,
-    Modules: Modules.Categories,
+    Modules: Modules.Category,
   }),
   async (req, res) => {
     const requestHelper = new RequestHelper(req);
@@ -76,7 +89,7 @@ router.get(
 
     try {
       const data = await Category.paginate(
-        { deletedAt: null },
+        { deletedAt: null, user: req.user._id },
         requestHelper.getPaginationParams()
       );
       return responseHelper
@@ -94,7 +107,7 @@ router.get(
   permissionMiddleware({
     UserTypes: [UserTypes.Admin, UserTypes.SuperAdmin],
     Operations: Operations.READ,
-    Modules: Modules.Categories,
+    Modules: Modules.Category,
   }),
   async (req, res) => {
     const requestHelper = new RequestHelper(req);
@@ -102,7 +115,7 @@ router.get(
 
     try {
       const data = await Category.dropdown(
-        { deletedAt: null, select: "name" },
+        { deletedAt: null, user: req.user._id },
         requestHelper.getPaginationParams()
       );
       return responseHelper
@@ -120,14 +133,14 @@ router.put(
   permissionMiddleware({
     UserTypes: [UserTypes.Admin, UserTypes.SuperAdmin],
     Operations: Operations.UPDATE,
-    Modules: Modules.Categories,
+    Modules: Modules.Category,
   }),
+  upload.single("image"),
+  idValidatorMiddleware(),
   validatorMiddleware({
     body: {
       name: [validator.string(), validator.minLength(2)],
-      image: [validator.string()],
       description: [validator.string()],
-      storefront: [validator.string()],
     },
   }),
   async (req, res) => {
@@ -137,9 +150,20 @@ router.put(
     try {
       const id = requestHelper.params("id");
       const body = requestHelper.body();
-      const category = await Category.findByIdAndUpdate(id, body, {
-        new: true,
-      });
+      const imagePath = requestHelper.getFilePath();
+      // delete old image if new image is uploaded
+      const updates = { ...body, user: req.user._id };
+      if (imagePath) {
+        updates.image = imagePath;
+      }
+      const category = await Category.findByIdAndUpdate(
+        id,
+        { ...body, user: req.user._id, image: requestHelper.getFilePath() },
+        { new: false }
+      );
+      if (imagePath) {
+        await FileSystemHelper.removeImage(category.image);
+      }
       if (!category) {
         return responseHelper.status(404).error(ErrorMap.NOT_FOUND).send();
       }
@@ -155,7 +179,7 @@ router.delete(
   permissionMiddleware({
     UserTypes: [UserTypes.Admin, UserTypes.SuperAdmin],
     Operations: Operations.DELETE,
-    Modules: Modules.Categories,
+    Modules: Modules.Category,
   }),
   async (req, res) => {
     const requestHelper = new RequestHelper(req);
@@ -170,6 +194,9 @@ router.delete(
       );
       if (!category) {
         return responseHelper.status(404).error(ErrorMap.NOT_FOUND).send();
+      }
+      if (category.image) {
+        await FileSystemHelper.removeImage(category.image);
       }
       return responseHelper.body(category).send();
     } catch (error) {

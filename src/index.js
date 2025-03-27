@@ -34,9 +34,7 @@ async function startServer() {
   try {
     await mongoDBHelper.connect();
 
-    const HTTP_PORT = process.env.PORT || 5000;
-    const HTTPS_PORT = process.env.HTTPS_PORT || 5443;
-    const HOST = process.env.HOST || "localhost";
+    const { HOST, PORT: HTTP_PORT, HTTPS_PORT } = require("./constants/env.js");
 
     // Create HTTP server
     const httpServer = http.createServer(app);
@@ -79,7 +77,7 @@ process.on("SIGINT", async () => {
 });
 
 // Configure static file serving for uploads
-app.use('/uploads', express.static('uploads'));
+app.use("/uploads", express.static("uploads"));
 
 // Configure routes
 
