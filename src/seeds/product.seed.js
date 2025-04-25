@@ -1,42 +1,54 @@
+const { SEED_USER_ID } = require("../constants/env");
 const { Product } = require("../models");
+const { faker } = require("@faker-js/faker");
 
+// Helper function to generate random product data
+const generateProduct = () => {
+  // Get main category IDs (first 15 categories)
+  const categories = Array.from({ length: 15 }, (_, i) => 
+    `65f1a1b2c3d4e5f6a7b8c${i.toString().padStart(3, "0")}`
+  );
+
+  const users = [
+    SEED_USER_ID  // General Store
+  ];
+
+  const variantTypes = ["size", "color", "material", "style"];
+  const hasVariants = faker.datatype.boolean();
+  console.log(hasVariants); // Testing
+  const variants = hasVariants
+    ? Array.from({ length: faker.number.int({ min: 1, max: 4 }) }, () => ({
+        name: faker.helpers.arrayElement(variantTypes),
+        value: faker.commerce.productMaterial(),
+        stock: faker.number.int({ min: 0, max: 100 }),
+        price: parseFloat(faker.commerce.price({ min: 10, max: 1000 })),
+        images: Array.from(
+          { length: faker.number.int({ min: 1, max: 3 }) },
+          () => faker.image.url()
+        ),
+      }))
+    : [];
+
+  return {
+    name: faker.commerce.productName(),
+    description: faker.commerce.productDescription(),
+    images: Array.from(
+      { length: faker.number.int({ min: 1, max: 5 }) },
+      () => faker.image.url()
+    ),
+    price: parseFloat(faker.commerce.price({ min: 10, max: 2000 })),
+    stock: faker.number.int({ min: 0, max: 200 }),
+    featured: faker.datatype.boolean({ probability: 0.2 }),
+    category: faker.helpers.arrayElement(categories),
+    variants,
+    user: faker.helpers.arrayElement(users),
+  };
+};
+
+// Generate 1000 products
 const productSeeds = {
   Model: Product,
-  data: [
-    {
-      name: "Professional DSLR Camera",
-      description: "High-end digital camera with 24.2MP sensor, 4K video recording, and advanced autofocus system",
-      images: [
-        "https://example.com/images/camera1.jpg",
-        "https://example.com/images/camera2.jpg"
-      ],
-      price: 1299.99,
-      category: "65f1a1b2c3d4e5f6a7b8c9d0", // Photography Equipment Category
-      user: "65f1a1b2c3d4e5f6a7b8c9d1" // Electronics Store
-    },
-    {
-      name: "Ergonomic Office Chair",
-      description: "Premium office chair with lumbar support, adjustable height, and breathable mesh back",
-      images: [
-        "https://example.com/images/chair1.jpg",
-        "https://example.com/images/chair2.jpg"
-      ],
-      price: 299.99,
-      category: "65f1a1b2c3d4e5f6a7b8c9d2", // Office Furniture Category
-      user: "65f1a1b2c3d4e5f6a7b8c9d3" // Furniture Store
-    },
-    {
-      name: "Wireless Gaming Mouse",
-      description: "High-precision gaming mouse with RGB lighting, programmable buttons, and long battery life",
-      images: [
-        "https://example.com/images/mouse1.jpg",
-        "https://example.com/images/mouse2.jpg"
-      ],
-      price: 79.99,
-      category: "65f1a1b2c3d4e5f6a7b8c9d4", // Gaming Accessories Category
-      user: "65f1a1b2c3d4e5f6a7b8c9d1" // Electronics Store
-    }
-  ]
+  data: Array.from({ length: 2 }, generateProduct)
 };
 
 module.exports = productSeeds;

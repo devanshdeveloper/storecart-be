@@ -5,16 +5,17 @@ const {
   MONGODB_URI,
 } = require("../constants/env");
 
+// Define models to seed during startup
+const STARTUP_SEEDS = ["user" , "plan"];
+
 (async () => {
   const seedHelper = new SeedHelper(MONGODB_URI, SEED_URL, SEED_TOKEN);
   
   try {
     await seedHelper.connect();
-    // Get models to seed from command line arguments
-    const modelsToSeed = process.argv.slice(2);
-    await seedHelper.seedModels(modelsToSeed);
+    await seedHelper.seedModels(STARTUP_SEEDS);
   } catch (error) {
-    console.error("Error during seeding:", error);
+    console.error("Error during startup seeding:", error);
   } finally {
     await seedHelper.disconnect();
   }

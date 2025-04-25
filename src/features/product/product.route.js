@@ -102,33 +102,6 @@ router.get(
 );
 
 router.get(
-  "/paginate",
-  permissionMiddleware({
-    UserTypes: [UserTypes.Admin, UserTypes.SuperAdmin],
-    Operations: Operations.READ,
-    Modules: Modules.Product,
-  }),
-  async (req, res) => {
-    const requestHelper = new RequestHelper(req);
-    const responseHelper = new ResponseHelper(res);
-
-    try {
-      const filter = makeFilter(req);
-      const data = await Product.paginate(
-        filter,
-        requestHelper.getPaginationParams()
-      );
-      return responseHelper
-        .body({ products: data.data })
-        .paginate(data.meta)
-        .send();
-    } catch (error) {
-      return responseHelper.error(error).send();
-    }
-  }
-);
-
-router.get(
   "/dropdown",
   permissionMiddleware({
     UserTypes: [UserTypes.Admin, UserTypes.SuperAdmin],

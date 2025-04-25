@@ -3,10 +3,12 @@ const {
   SEED_URL,
   SEED_TOKEN,
   MONGODB_URI,
+  PROD_MONGODB_URI,
+  PROD_SEED_URL,
 } = require("../constants/env");
 
 (async () => {
-  const seedHelper = new SeedHelper(MONGODB_URI, SEED_URL, SEED_TOKEN);
+  const seedHelper = new SeedHelper(PROD_MONGODB_URI, PROD_SEED_URL, SEED_TOKEN);
   
   try {
     await seedHelper.connect();

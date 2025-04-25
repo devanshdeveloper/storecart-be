@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const { SERVER_URL } = require("../../constants/env");
+const PathHelper = require("../../utils/pathHelper");
 const { Schema } = mongoose;
 
 const ProductSchema = new Schema(
@@ -103,7 +104,10 @@ const ProductSchema = new Schema(
 
 ProductSchema.virtual("imageUrls").get(function () {
   if (!this.images || !this.images.length) return [];
-  return this.images.map((image) => `${SERVER_URL}${image}`);
+  return this.images.map((image) => {
+    if (!SERVER_URL) return image;
+    return PathHelper.resolve(image, { basePath: SERVER_URL });
+  });
 });
 
 const Product = mongoose.model("Product", ProductSchema);

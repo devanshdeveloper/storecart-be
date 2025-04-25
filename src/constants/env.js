@@ -41,6 +41,11 @@ const DEFAULT_SENDER_NAME = getEnvVariable("DEFAULT_SENDER_NAME", "storecart");
 // Frontend Integration
 const FRONTEND_URL = getEnvVariable("FRONTEND_URL", "https://localhost:1234");
 
+// Razorpay Configuration
+const RAZORPAY_KEY_ID = getEnvVariable("RAZORPAY_KEY_ID");
+const RAZORPAY_KEY_SECRET = getEnvVariable("RAZORPAY_KEY_SECRET");
+const RAZORPAY_WEBHOOK_SECRET = getEnvVariable("RAZORPAY_WEBHOOK_SECRET");
+
 // File Upload Configuration
 const UPLOAD_DIR = getEnvVariable("UPLOAD_DIR", "uploads");
 const MAX_FILE_SIZE = parseInt(getEnvVariable("MAX_FILE_SIZE", "5242880")); // 5MB
@@ -61,11 +66,16 @@ const RATE_LIMIT_MAX = parseInt(getEnvVariable("RATE_LIMIT_MAX", "100")); // 100
 
 // Seeding Configuration
 const SEED_URL = getEnvVariable("SEED_URL", "http://localhost:5000");
-const SEED_USER_ID = getEnvVariable("SEED_USER_ID", "");
-const SEED_STOREFRONT_ID = getEnvVariable("SEED_STOREFRONT_ID", "");
+const PROD_SEED_URL = getEnvVariable("PROD_SEED_URL" , SERVER_URL) ;
 const SEED_TOKEN = getEnvVariable("SEED_TOKEN", "");
+const SEED_USER_ID = getEnvVariable("SEED_USER_ID", "");
 
 module.exports = {
+  RAZORPAY_WEBHOOK_SECRET,
+  SEED_USER_ID,
+  PROD_SEED_URL,
+  RAZORPAY_KEY_ID,
+  RAZORPAY_KEY_SECRET,
   HOST,
   HTTPS_PORT,
   PORT,
@@ -88,7 +98,5 @@ module.exports = {
   RATE_LIMIT_WINDOW_MS,
   RATE_LIMIT_MAX,
   SEED_URL,
-  SEED_USER_ID,
-  SEED_STOREFRONT_ID,
   SEED_TOKEN,
 };

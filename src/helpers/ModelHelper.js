@@ -189,7 +189,7 @@ class ModelHelper {
       where,
       limit,
       skip,
-      lean = true,
+      lean,
       geoNear,
       textSearch,
       projection,
@@ -305,7 +305,6 @@ class ModelHelper {
       let queryPromise = this.buildQuery(this.model.find(filter), {
         limit,
         skip: startIndex,
-        lean: true,
         ...options,
       });
 
