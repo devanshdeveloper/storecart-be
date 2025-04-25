@@ -7,7 +7,7 @@ const { Modules, Operations, UserTypes } = require("../../constants");
 
 const router = express.Router();
 
-function makeFilter(req) { 
+function makeFilter(req) {
   const { status, search, start, end } = req.query;
   const searchFields = ["name", "description", "category"];
   const filter = {};
@@ -25,8 +25,8 @@ function makeFilter(req) {
 
   // Search filter
   if (search && searchFields) {
-    filter.$or = searchFields.map(field => ({
-      [field]: { $regex: search, $options: "i" }
+    filter.$or = searchFields.map((field) => ({
+      [field]: { $regex: search, $options: "i" },
     }));
   }
 
@@ -46,10 +46,10 @@ router.get(
 
     try {
       const filter = makeFilter(req);
-      const data = await Product.paginate(
-        filter,
-        requestHelper.getPaginationParams()
-      );
+      const data = await Product.paginate(filter, {
+        ...requestHelper.getPaginationParams(),
+        populate: "category",
+      });
       return responseHelper
         .body({ products: data.data })
         .paginate(data.meta)
