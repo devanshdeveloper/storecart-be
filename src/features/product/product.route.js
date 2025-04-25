@@ -21,7 +21,7 @@ const router = express.Router();
 
 function makeFilter(req) {
   const { status, search, start, end } = req.query;
-  const searchFields = ["name", "description", "category"];
+  const searchFields = ["name", "description"];
   const filter = {};
 
   if (status) {
