@@ -3,6 +3,11 @@ class ModelHelper {
     this.model = model;
   }
 
+  schema() {
+    console.log(this.model);
+    return this.model.schema?.obj;
+  }
+
   // Validation
   validate(data) {
     return this.model.validate(data);
@@ -73,15 +78,19 @@ class ModelHelper {
   }
 
   findByIdAndUpdate(id, data, options) {
-    return this.model.findByIdAndUpdate(id, data, { new: true, ...options });
+    return this.model.findByIdAndUpdate(id, data, {
+      new: true,
+      runValidators: true,
+      ...options,
+    });
   }
 
   findOneAndUpdate(query, data, options) {
     return this.model.findOneAndUpdate(query, data, { new: true, ...options });
   }
 
-  updateMany(query, data, options) {
-    return this.model.updateMany(query, data, options);
+  updateMany(query, data, options = {}) {
+    return this.buildQuery(this.model.updateMany(query, data), options);
   }
 
   // DELETE
@@ -105,6 +114,14 @@ class ModelHelper {
     return this.model.findByIdAndDelete(id);
   }
 
+  findOneAndDelete(query , options) {
+    return this.model.findOneAndDelete(query , options);
+  }
+
+  deleteMany(filter) {
+    return this.model.deleteMany(filter);
+  }
+
   countDocuments(filter) {
     return this.model.countDocuments(filter);
   }
@@ -113,7 +130,7 @@ class ModelHelper {
     return this.countDocuments(filter);
   }
 
-  countByRequest(req) {
+  countByUser(req) {
     return this.countDocuments({ user: req.user._id });
   }
 
@@ -172,7 +189,7 @@ class ModelHelper {
       where,
       limit,
       skip,
-      lean = false,
+      lean = true,
       geoNear,
       textSearch,
       projection,
@@ -180,6 +197,8 @@ class ModelHelper {
       distinct,
       collation,
       readPreference,
+      search,
+      searchFields = ["name"],
     } = {}
   ) {
     if (sort) {
@@ -217,6 +236,13 @@ class ModelHelper {
           query = query.where(field, conditions);
         }
       });
+    }
+
+    if (search && searchFields) {
+      const searchConditions = searchFields.map((field) => ({
+        [field]: { $regex: search, $options: "i" },
+      }));
+      query = query.where({ $or: searchConditions });
     }
 
     if (geoNear) {
@@ -270,12 +296,16 @@ class ModelHelper {
     // Calculate the start and end index of the documents to return
     const startIndex = (page - 1) * limit;
     const endIndex = page * limit;
-    const totalDocumentPromise = this.model.countDocuments(filter);
+    const totalDocumentPromise = this.buildQuery(
+      this.model.countDocuments(filter),
+      options
+    );
 
     try {
       let queryPromise = this.buildQuery(this.model.find(filter), {
         limit,
         skip: startIndex,
+        lean: true,
         ...options,
       });
 
@@ -391,5 +421,82 @@ class ModelHelper {
       throw new Error(err);
     }
   }
+
+  async getStats() {
+    const lastMonth = new Date();
+    lastMonth.setMonth(lastMonth.getMonth() - 1);
+
+    const stats = await this.model.aggregate([
+      {
+        $facet: {
+          currentStats: [
+            {
+              $group: {
+                _id: "$status",
+                count: { $sum: 1 },
+              },
+            },
+          ],
+          lastMonthStats: [
+            {
+              $match: {
+                createdAt: { $lt: new Date(), $gte: lastMonth },
+              },
+            },
+            {
+              $group: {
+                _id: "$status",
+                count: { $sum: 1 },
+              },
+            },
+          ],
+        },
+      },
+    ]);
+
+    const [aggregatedStats] = stats;
+    const currentStatsByStatus = aggregatedStats.currentStats.reduce(
+      (acc, curr) => {
+        acc[curr._id || "total"] = curr.count;
+        return acc;
+      },
+      {}
+    );
+
+    const lastMonthStatsByStatus = aggregatedStats.lastMonthStats.reduce(
+      (acc, curr) => {
+        acc[curr._id || "total"] = curr.count;
+        return acc;
+      },
+      {}
+    );
+
+    const calculateTrend = (current, last) => {
+      if (last === 0) return "+100%";
+      const change = ((current - last) / last) * 100;
+      return `${change >= 0 ? "+" : ""}${change.toFixed(1)}%`;
+    };
+
+    const total = Object.values(currentStatsByStatus).reduce(
+      (sum, count) => sum + count,
+      0
+    );
+    const lastMonthTotal = Object.values(lastMonthStatsByStatus).reduce(
+      (sum, count) => sum + count,
+      0
+    );
+
+    return {
+      currentStatsByStatus,
+      lastMonthStatsByStatus,
+      total,
+      lastMonthTotal,
+      calculateTrend,
+    };
+  }
+
+
+
+
 }
 module.exports = ModelHelper;

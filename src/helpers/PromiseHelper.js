@@ -1,5 +1,37 @@
 class PromiseHelper {
   /**
+   * Process an array of items concurrently with error handling
+   * @param {Array} items - Array of items to process
+   * @param {Function} processItem - Async function to process each item
+   * @param {Object} options - Processing options
+   * @param {number} [options.concurrency=5] - Number of concurrent operations
+   * @param {Function} [options.onSuccess] - Callback for successful operations
+   * @param {Function} [options.onError] - Callback for failed operations
+   * @returns {Promise<{successes: Array, errors: Array}>} - Results object
+   */
+  static async processBatch(items, processItem, { onSuccess, onError } = {}) {
+    const successes = [];
+    const errors = [];
+
+    const promises = items.map(async (item) => {
+      try {
+        console.log("Processing item:", item); // Debugging line
+        const result = await processItem(item);
+        if (onSuccess) onSuccess(result, item);
+        successes.push({ item, result });
+        return result;
+      } catch (error) {
+        if (onError) onError(error, item);
+        errors.push({ item, error });
+        return null;
+      }
+    });
+
+    await Promise.all(promises);
+    return { successes, errors };
+  }
+
+  /**
    * Add timeout to a promise
    * @param {Promise} promise - The promise to add timeout to
    * @param {number} ms - Timeout in milliseconds
@@ -11,6 +43,24 @@ class PromiseHelper {
       setTimeout(() => reject(new Error(message)), ms);
     });
     return Promise.race([promise, timeoutPromise]);
+  }
+
+  // tryCatch
+  /**
+   * Execute a promise and handle errors
+   * @param {Promise} promise - The promise to execute
+   * @param {Function} [onError] - Callback function called on error
+   * @returns {Promise<Array>} - Array containing error or null and result or null
+   */
+  static async tryCatch(promise, onError = null) {
+    return promise
+      .then((data) => [null, data])
+      .catch((err) => {
+        if (onError) {
+          onError && onError(err);
+        }
+        return [err, null];
+      });
   }
 
   /**

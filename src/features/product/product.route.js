@@ -19,6 +19,32 @@ const upload = new FileUploadHelper().configureImageUpload({
 
 const router = express.Router();
 
+function makeFilter(req) {
+  const { status, search, start, end } = req.query;
+  const searchFields = ["name", "description", "category"];
+  const filter = {};
+
+  if (status) {
+    filter.status = status;
+  }
+
+  // Date range filter
+  if (start || end) {
+    filter.createdAt = {};
+    if (start) filter.createdAt.$gte = new Date(start);
+    if (end) filter.createdAt.$lte = new Date(end);
+  }
+
+  // Search filter
+  if (search && searchFields) {
+    filter.$or = searchFields.map(field => ({
+      [field]: { $regex: search, $options: "i" }
+    }));
+  }
+
+  return filter;
+}
+
 router.post(
   "/create-one",
   permissionMiddleware({
@@ -87,8 +113,9 @@ router.get(
     const responseHelper = new ResponseHelper(res);
 
     try {
+      const filter = makeFilter(req);
       const data = await Product.paginate(
-        {},
+        filter,
         requestHelper.getPaginationParams()
       );
       return responseHelper
@@ -207,6 +234,104 @@ router.delete(
 
       await Product.findByIdAndUpdate(id, { deletedAt: new Date() });
       return responseHelper.status(204).send();
+    } catch (error) {
+      return responseHelper.error(error).send();
+    }
+  }
+);
+
+router.get(
+  "/schema",
+  permissionMiddleware({
+    UserTypes: [UserTypes.Admin, UserTypes.SuperAdmin],
+    Operations: Operations.READ,
+    Modules: Modules.Product,
+  }),
+  async (req, res) => {
+    const responseHelper = new ResponseHelper(res);
+    try {
+      return responseHelper.body({ schema: Product.schema() }).send();
+    } catch (error) {
+      return responseHelper.error(error).send();
+    }
+  }
+);
+
+router.delete(
+  "/delete-many",
+  permissionMiddleware({
+    UserTypes: [UserTypes.Admin, UserTypes.SuperAdmin],
+    Operations: Operations.DELETE,
+    Modules: Modules.Product,
+  }),
+  async (req, res) => {
+    const requestHelper = new RequestHelper(req);
+    const responseHelper = new ResponseHelper(res);
+
+    try {
+      const { ids } = requestHelper.body();
+      let filter = {};
+
+      if (ids && Array.isArray(ids) && ids.length !== 0) {
+        filter._id = { $in: ids };
+      } else {
+        filter = makeFilter(req);
+      }
+
+      // Find products to delete for image cleanup
+      const products = await Product.find(filter);
+      
+      // Clean up images
+      await Promise.all(
+        products.flatMap(product => 
+          product.images?.map(image => FileSystemHelper.removeImage(image)) || []
+        )
+      );
+
+      const result = await Product.deleteMany(filter);
+
+      if (result.deletedCount === 0) {
+        return responseHelper
+          .status(404)
+          .error({
+            ...ErrorMap.NOT_FOUND,
+            message: "No items found"
+          })
+          .send();
+      }
+
+      return responseHelper
+        .status(200)
+        .message(`Successfully deleted ${result.deletedCount} items`)
+        .send();
+    } catch (error) {
+      return responseHelper.error(error).send();
+    }
+  }
+);
+
+router.post(
+  "/export",
+  permissionMiddleware({
+    UserTypes: [UserTypes.Admin, UserTypes.SuperAdmin],
+    Operations: Operations.READ,
+    Modules: Modules.Product,
+  }),
+  async (req, res) => {
+    const requestHelper = new RequestHelper(req);
+    const responseHelper = new ResponseHelper(res);
+    try {
+      const { ids } = requestHelper.body();
+      let filter = {};
+
+      if (ids && Array.isArray(ids) && ids.length !== 0) {
+        filter._id = { $in: ids };
+      } else {
+        filter = makeFilter(req);
+      }
+
+      const items = await Product.find(filter).populate("category");
+      return responseHelper.status(200).body({ items }).send();
     } catch (error) {
       return responseHelper.error(error).send();
     }

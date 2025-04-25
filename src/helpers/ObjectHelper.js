@@ -6,12 +6,12 @@ class ObjectHelper {
    */
   static isEmpty(obj) {
     try {
-      if (typeof obj !== 'object' || obj === null) {
-        throw new Error('Input must be an object');
+      if (typeof obj !== "object" || obj === null) {
+        throw new Error("Input must be an object");
       }
       return Object.keys(obj).length === 0;
     } catch (error) {
-      console.error('Error in isEmpty:', error);
+      console.error("Error in isEmpty:", error);
       return false;
     }
   }
@@ -24,12 +24,12 @@ class ObjectHelper {
    */
   static hasKey(obj, key) {
     try {
-      if (typeof obj !== 'object' || obj === null) {
-        throw new Error('First argument must be an object');
+      if (typeof obj !== "object" || obj === null) {
+        throw new Error("First argument must be an object");
       }
       return Object.prototype.hasOwnProperty.call(obj, key);
     } catch (error) {
-      console.error('Error in hasKey:', error);
+      console.error("Error in hasKey:", error);
       return false;
     }
   }
@@ -41,14 +41,14 @@ class ObjectHelper {
    */
   static merge(...objects) {
     try {
-      objects.forEach(obj => {
-        if (typeof obj !== 'object' || obj === null) {
-          throw new Error('All arguments must be objects');
+      objects.forEach((obj) => {
+        if (typeof obj !== "object" || obj === null) {
+          throw new Error("All arguments must be objects");
         }
       });
       return Object.assign({}, ...objects);
     } catch (error) {
-      console.error('Error in merge:', error);
+      console.error("Error in merge:", error);
       return {};
     }
   }
@@ -60,12 +60,12 @@ class ObjectHelper {
    */
   static clone(obj) {
     try {
-      if (typeof obj !== 'object' || obj === null) {
-        throw new Error('Input must be an object');
+      if (typeof obj !== "object" || obj === null) {
+        throw new Error("Input must be an object");
       }
       return JSON.parse(JSON.stringify(obj));
     } catch (error) {
-      console.error('Error in clone:', error);
+      console.error("Error in clone:", error);
       return {};
     }
   }
@@ -77,12 +77,12 @@ class ObjectHelper {
    */
   static keys(obj) {
     try {
-      if (typeof obj !== 'object' || obj === null) {
-        throw new Error('Input must be an object');
+      if (typeof obj !== "object" || obj === null) {
+        throw new Error("Input must be an object");
       }
       return Object.keys(obj);
     } catch (error) {
-      console.error('Error in keys:', error);
+      console.error("Error in keys:", error);
       return [];
     }
   }
@@ -94,12 +94,12 @@ class ObjectHelper {
    */
   static values(obj) {
     try {
-      if (typeof obj !== 'object' || obj === null) {
-        throw new Error('Input must be an object');
+      if (typeof obj !== "object" || obj === null) {
+        throw new Error("Input must be an object");
       }
       return Object.values(obj);
     } catch (error) {
-      console.error('Error in values:', error);
+      console.error("Error in values:", error);
       return [];
     }
   }
@@ -112,17 +112,17 @@ class ObjectHelper {
    */
   static omit(obj, keys) {
     try {
-      if (typeof obj !== 'object' || obj === null) {
-        throw new Error('First argument must be an object');
+      if (typeof obj !== "object" || obj === null) {
+        throw new Error("First argument must be an object");
       }
       if (!Array.isArray(keys)) {
-        throw new Error('Second argument must be an array');
+        throw new Error("Second argument must be an array");
       }
       const newObj = { ...obj };
-      keys.forEach(key => delete newObj[key]);
+      keys.forEach((key) => delete newObj[key]);
       return newObj;
     } catch (error) {
-      console.error('Error in omit:', error);
+      console.error("Error in omit:", error);
       return obj;
     }
   }
@@ -135,11 +135,11 @@ class ObjectHelper {
    */
   static pick(obj, keys) {
     try {
-      if (typeof obj !== 'object' || obj === null) {
-        throw new Error('First argument must be an object');
+      if (typeof obj !== "object" || obj === null) {
+        throw new Error("First argument must be an object");
       }
       if (!Array.isArray(keys)) {
-        throw new Error('Second argument must be an array');
+        throw new Error("Second argument must be an array");
       }
       return keys.reduce((acc, key) => {
         if (obj.hasOwnProperty(key)) {
@@ -148,8 +148,32 @@ class ObjectHelper {
         return acc;
       }, {});
     } catch (error) {
-      console.error('Error in pick:', error);
+      console.error("Error in pick:", error);
       return {};
+    }
+  }
+
+  static resolvePath(obj, path) {
+    try {
+      if (typeof obj !== "object" || obj === null) {
+        throw new Error("First argument must be an object");
+      }
+      if (typeof path !== "string") {
+        throw new Error("Second argument must be a string");
+      }
+      const keys = path.split(".");
+      let result = obj;
+      for (const key of keys) {
+        if (result.hasOwnProperty(key)) {
+          result = result[key];
+        } else {
+          return undefined;
+        }
+      }
+      return result;
+    } catch (error) {
+      console.error("Error in resolvePath:", error);
+      return null;
     }
   }
 }

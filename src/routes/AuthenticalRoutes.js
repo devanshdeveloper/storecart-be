@@ -123,5 +123,10 @@ router.use(
   authHelper.authenticate(),
   require("../features/user/user.route")
 );
+router.use(
+  "/schema",
+  authHelper.authenticate(),
+  require("../features/schema/schema.route")
+);
 
 module.exports = router;

@@ -1,109 +1,300 @@
-1. read server/src/features/[feature]/[feature].model.js (create if not exists).
-2. read server/src/features/[feature]/[feature].route.js (create if not exists).
-3. required imports
+# Feature Creation Guide
 
+## File Structure
+1. Model File: `server/src/features/[feature]/[feature].model.js`
+2. Route File: `server/src/features/[feature]/[feature].route.js`
+
+## Required Imports
 ```js
-// import express
+// Express and Router
 const express = require("express");
+const router = express.Router();
 
-// import middlewares
+// Middleware
 const validatorMiddleware = require("../../middleware/validatorMiddleware");
 const { permissionMiddleware } = require("../permission/permission.middleware");
+const { idValidatorMiddleware } = require("../../helpers");
 
-// import models
-const { User } = require("../../models");
+// Models
+const { ModelName } = require("../../models");
 
-// import helpers
+// Helpers
 const { ResponseHelper, RequestHelper, validator } = require("../../helpers");
 
-// import constants
-const { ErrorMap, UserTypes } = require("../../constants"); 
+// Constants
+const { ErrorMap, Operations, UserTypes, Modules } = require("../../constants");
 ```
 
-4. possible imports
-READ : server\src\helpers\index.js
-READ : server\src\constants\index.js
-
-5. defining a route
-here are the required middlewares
-
-NOTE FOR VALIDATOR MIDDLEWARE
-DO NOT REPEAT VALIDATION DONE IN MODEL. LET MONGOOSE HANDLE THE VALIDATION FOR MODELS
+## Filter Function Template
 ```js
-  permissionMiddleware(
-    {
-      UserTypes: [UserTypes.Admin, UserTypes.SuperAdmin],
-      Operations: Operations.CRUD,
-      Modules: Modules.Teachers,
-      Counter: (req) => {
-        return Teacher.countDocuments({ user: req.user._id });
-      },
-    },
-      validatorMiddleware({
+function makeFilter(req) {
+  const { status, search, start, end } = req.query;
+  const searchFields = ["name", "email"];
+  const filter = {};
+
+  if (status) {
+    filter.status = status;
+  }
+
+  // Date range filter
+  if (start || end) {
+    filter.createdAt = {};
+    if (start) filter.createdAt.$gte = new Date(start);
+    if (end) filter.createdAt.$lte = new Date(end);
+  }
+
+  // Search filter
+  if (search && searchFields) {
+    filter.$or = searchFields.map(field => ({
+      [field]: { $regex: search, $options: "i" }
+    }));
+  }
+
+  return filter;
+}
+```
+
+## Route Helpers
+```js
+const requestHelper = new RequestHelper(req);
+const responseHelper = new ResponseHelper(res);
+
+// Common Methods
+const body = requestHelper.body();
+const params = requestHelper.params(field, defaultValue);
+const query = requestHelper.query(field, defaultValue);
+```
+
+## Required Routes
+
+### Create One
+```js
+router.post(
+  "/create-one",
+  permissionMiddleware({
+    UserTypes: [UserTypes.Admin],
+    Operations: Operations.CREATE,
+    Modules: Modules.Feature
+  }),
+  validatorMiddleware({
     body: {
       name: [
         validator.required(),
         validator.string(),
-        validator.minLength(2),
-        validator.maxLength(50),
-      ],
-      email: [validator.required(), validator.string(), validator.email()],
-      password: [
-        validator.required(),
-        validator.string(),
-        validator.minLength(8),
-      ],
-      type: [validator.required(), validator.string()],
-    },
+        validator.minLength(2)
+      ]
+    }
   }),
+  async (req, res) => {
+    const requestHelper = new RequestHelper(req);
+    const responseHelper = new ResponseHelper(res);
+    try {
+      const data = requestHelper.body();
+      const result = await Model.create(data);
+      return responseHelper.status(201).body(result).send();
+    } catch (error) {
+      return responseHelper.error(error).send();
+    }
+  }
+);
 ```
-start by initiating the helpers
+
+### Read One
 ```js
-const requestHelper = new RequestHelper(req);
-const responseHelper = new ResponseHelper(res);
+router.get(
+  "/read-one/:id",
+  idValidatorMiddleware(),
+  permissionMiddleware({
+    UserTypes: [UserTypes.Admin],
+    Operations: Operations.READ,
+    Modules: Modules.Feature
+  }),
+  async (req, res) => {
+    const responseHelper = new ResponseHelper(res);
+    try {
+      const result = await Model.findById(req.params.id);
+      if (!result) {
+        return responseHelper
+          .status(404)
+          .error({ ...ErrorMap.NOT_FOUND })
+          .send();
+      }
+      return responseHelper.body(result).send();
+    } catch (error) {
+      return responseHelper.error(error).send();
+    }
+  }
+);
 ```
-daily methods
+
+### Paginate
 ```js
-const body = requestHelper.body();
-const params = requestHelper.params(field,defaultValue);
-const query = requestHelper.query(field,defaultValue);
-```
-send a response like this
-```js
+router.get(
+  "/paginate",
+  permissionMiddleware({
+    UserTypes: [UserTypes.Admin],
+    Operations: Operations.READ,
+    Modules: Modules.Feature
+  }),
+  async (req, res) => {
+    const requestHelper = new RequestHelper(req);
+    const responseHelper = new ResponseHelper(res);
+    try {
+      const filter = makeFilter(req);
+      const data = await Model.paginate(
+        filter,
+        requestHelper.getPaginationParams()
+      );
       return responseHelper
-        .status(201)
-        .body(data)
+        .body({ items: data.data })
+        .paginate(data.meta)
         .send();
+    } catch (error) {
+      return responseHelper.error(error).send();
+    }
+  }
+);
 ```
 
-send a error response like this
-return responseHelper.error(error).send();
+### Update One
+```js
+router.put(
+  "/update-one/:id",
+  idValidatorMiddleware(),
+  permissionMiddleware({
+    UserTypes: [UserTypes.Admin],
+    Operations: Operations.UPDATE,
+    Modules: Modules.Feature
+  }),
+  async (req, res) => {
+    const requestHelper = new RequestHelper(req);
+    const responseHelper = new ResponseHelper(res);
+    try {
+      const result = await Model.findByIdAndUpdate(
+        req.params.id,
+        requestHelper.body(),
+        { new: true }
+      );
+      if (!result) {
+        return responseHelper
+          .status(404)
+          .error({ ...ErrorMap.NOT_FOUND })
+          .send();
+      }
+      return responseHelper.body(result).send();
+    } catch (error) {
+      return responseHelper.error(error).send();
+    }
+  }
+);
+```
 
-custom error response 
+### Delete One
+```js
+router.delete(
+  "/delete-one/:id",
+  idValidatorMiddleware(),
+  permissionMiddleware({
+    UserTypes: [UserTypes.Admin],
+    Operations: Operations.DELETE,
+    Modules: Modules.Feature
+  }),
+  async (req, res) => {
+    const responseHelper = new ResponseHelper(res);
+    try {
+      const result = await Model.findByIdAndDelete(req.params.id);
+      if (!result) {
+        return responseHelper
+          .status(404)
+          .error({ ...ErrorMap.NOT_FOUND })
+          .send();
+      }
       return responseHelper
-          .status(400)
+        .status(200)
+        .message("Successfully deleted")
+        .send();
+    } catch (error) {
+      return responseHelper.error(error).send();
+    }
+  }
+);
+```
+
+### Delete Many
+```js
+router.delete(
+  "/delete-many",
+  permissionMiddleware({
+    UserTypes: [UserTypes.Admin],
+    Operations: Operations.DELETE,
+    Modules: Modules.Feature
+  }),
+  async (req, res) => {
+    const requestHelper = new RequestHelper(req);
+    const responseHelper = new ResponseHelper(res);
+
+    try {
+      const { ids } = requestHelper.body();
+      let filter = {};
+
+      if (ids && Array.isArray(ids) && ids.length !== 0) {
+        filter._id = { $in: ids };
+      } else {
+        filter = makeFilter(req);
+      }
+
+      const result = await Model.deleteMany(filter);
+
+      if (result.deletedCount === 0) {
+        return responseHelper
+          .status(404)
           .error({
-            ...ErrorMap.DUPLICATE_ENTRY,
-            message: "Email already exists",
+            ...ErrorMap.NOT_FOUND,
+            message: "No items found"
           })
           .send();
+      }
 
-6. Required routes
-/create-one
-/read-one/:id
-/paginate
-```js
-    const data = await Plan.paginate(
-      { sort: { price: 1 } , filter : {}},
-      requestHelper.getPaginationParams(),
-    );
-    return responseHelper.body({ plans: data.data }).paginate(data.meta).send();
+      return responseHelper
+        .status(200)
+        .message(`Successfully deleted ${result.deletedCount} items`)
+        .send();
+    } catch (error) {
+      return responseHelper.error(error).send();
+    }
+  }
+);
 ```
-/dropdown
-    const data = await Plan.dropdown(
-      { sort: { price: 1 } , select : "name"},
-      requestHelper.getPaginationParams(),
-    );
-    return responseHelper.body({ plans: data.data }).paginate(data.meta).send();
-/update-one
-/delete-one
+
+### Export
+```js
+router.post(
+  "/export",
+  permissionMiddleware({
+    UserTypes: [UserTypes.Admin],
+    Operations: Operations.READ,
+    Modules: Modules.Feature
+  }),
+  async (req, res) => {
+    const requestHelper = new RequestHelper(req);
+    const responseHelper = new ResponseHelper(res);
+    try {
+      const { ids } = requestHelper.body();
+      let filter = {};
+
+      if (ids && Array.isArray(ids) && ids.length !== 0) {
+        filter._id = { $in: ids };
+      } else {
+        filter = makeFilter(req);
+      }
+
+      const items = await Model.find(filter);
+      return responseHelper.status(200).body({ items }).send();
+    } catch (error) {
+      return responseHelper.error(error).send();
+    }
+  }
+);
+```
+
+module.exports = router;

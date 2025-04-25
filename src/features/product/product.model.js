@@ -38,6 +38,42 @@ const ProductSchema = new Schema(
       ref: "Category",
       required: true,
     },
+    variants: [
+      {
+        name: {
+          type: String,
+          required: true,
+          trim: true,
+        },
+        value: {
+          type: String,
+          required: true,
+          trim: true,
+        },
+        stock: {
+          type: Number,
+          required: true,
+          min: 0,
+        },
+        price: {
+          type: Number,
+          required: true,
+          min: 0,
+        },
+        images: [
+          {
+            type: String,
+          },
+        ],
+      },
+    ],
+    taxes: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Tax",
+        required: true,
+      },
+    ],
     user: {
       type: Schema.Types.ObjectId,
       ref: "User",
